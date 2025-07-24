@@ -1,11 +1,10 @@
 import streamlit as st
 import os
-from openai import OpenAI
+import openai
 
-# Initialize OpenAI client
-client = OpenAI(api_key=st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
-
-client.base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+# Load API credentials from Streamlit secrets
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_base = st.secrets["OPENAI_BASE_URL"]
 
 # Streamlit UI setup
 st.set_page_config(page_title="MedAI Chatbot", page_icon="🩺")
@@ -35,7 +34,7 @@ if prompt:
         message_placeholder.markdown("🧠 Thinking...")
 
         try:
-            # Add system message first
+            # Add system message for MedAI persona
             full_messages = [
                 {
                     "role": "system",
@@ -51,13 +50,13 @@ Be helpful, calm, and responsible.
             ] + st.session_state.messages
 
             # Get response from OpenAI
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",  # or "gpt-4" if available
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
                 messages=full_messages,
                 temperature=0.7
             )
+            reply = response["choices"][0]["message"]["content"]
 
-            reply = response.choices[0].message.content
         except Exception as e:
             reply = f"⚠️ Error: {e}"
 
